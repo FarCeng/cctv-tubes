@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-CAM Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #121212; color: #e0e0e0; display: flex; height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; gap: 15px;}
+        .sidebar { width: 280px; flex-shrink: 0; background-color: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);}
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
+        .camera-view { background-color: #000; width: 100%; flex-grow: 1; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;}
+        .camera-view img { display: none; width: 100%; height: 100%; object-fit: contain; }
+        .camera-view .placeholder { color: #555; font-size: 1.2em; }
+        .controls-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 0.9em; color: #bbb; display: flex; justify-content: space-between; }
+        input[type="range"] { width: 100%; -webkit-appearance: none; appearance: none; background: #333; height: 8px; border-radius: 4px; outline: none; transition: background 0.2s;}
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #007bff; border-radius: 50%; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; background: #007bff; border-radius: 50%; cursor: pointer; border:none; }
+        .button-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button, a.button { background-color: #333; color: white; border: 1px solid #555; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; text-decoration: none; font-size: 1em; transition: background-color 0.2s, border-color 0.2s; }
+        button:hover, a.button:hover { background-color: #444; border-color: #777; }
+        #send-controls { background-color: #007bff; border-color: #007bff; font-weight: bold; grid-column: 1 / -1; }
+        #send-controls:hover { background-color: #0056b3; border-color: #0056b3; }
+        #status-text { text-align: center; color: #888; font-size: 0.9em; height: 20px;}
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Kontrol</h2>
+        <div class="controls-group">
+            <label for="tilt">Tilt: <span id="tilt-value">{{ current_state.servo_tilt }}</span></label>
+            <input type="range" id="tilt" min="0" max="180" value="{{ current_state.servo_tilt }}">
+        </div>
+        <div class="controls-group">
+            <label for="pan">Pan: <span id="pan-value">{{ current_state.servo_pan }}</span></label>
+            <input type="range" id="pan" min="0" max="180" value="{{ current_state.servo_pan }}">
+        </div>
+        <div class="controls-group">
+            <label for="cahaya">Cahaya: <span id="cahaya-value">{{ current_state.led_intensity }}</span></label>
+            <input type="range" id="cahaya" min="0" max="255" value="{{ current_state.led_intensity }}">
+        </div>
+        <button id="send-controls">Kirim Perintah</button>
+        <div id="status-text"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="camera-view">
+            <p class="placeholder">Stream video akan muncul di sini</p>
+            <img id="video-stream" src="" alt="Video Stream">
+        </div>
+        <div class="button-panel">
+            <button id="stream-btn">Mulai Stream</button>
+            <button id="capture-btn">Capture Foto</button>
+            <a href="/images" class="button">Lihat Galeri</a>
+        </div>
+    </div>
+
+    <script>
+        // ... (Fungsi update nilai slider dan event listener 'send-controls' tetap sama)
+
+        // Tombol Stream: Toggle mode streaming
+        const streamBtn = document.getElementById('stream-btn');
+        const videoElement = document.getElementById('video-stream');
+        const placeholder = document.querySelector('.camera-view .placeholder');
+        let isStreaming = false; // Tambahkan variabel untuk melacak status stream
+
+        streamBtn.addEventListener('click', () => {
+            fetch('/toggle_stream', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                isStreaming = data.streaming; // Update status streaming
+                if (isStreaming) {
+                    // Tambahkan timestamp untuk mencegah browser caching
+                    videoElement.src = `/video_feed?t=${new Date().getTime()}`;
+                    videoElement.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    streamBtn.textContent = 'Stop Stream';
+                    streamBtn.style.backgroundColor = '#dc3545';
+                } else {
+                    videoElement.src = '';
+                    videoElement.style.display = 'none';
+                    placeholder.style.display = 'block';
+                    streamBtn.textContent = 'Mulai Stream';
+                    streamBtn.style.backgroundColor = '#333';
+                }
+            });
+        });
+
+        // Tombol Capture: Memicu pengambilan satu gambar
+        document.getElementById('capture-btn').addEventListener('click', () => {
+            statusText.textContent = 'Mengirim perintah capture...';
+            fetch('/trigger_capture', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'capture signal sent') {
+                    statusText.textContent = 'Capture terkirim! Menunggu gambar...';
+                    
+                    // Jika stream tidak aktif, tampilkan gambar capture setelah beberapa saat
+                    // Ini memberi waktu bagi ESP32 untuk mengambil dan mengunggah gambar.
+                    if (!isStreaming) {
+                        setTimeout(() => {
+                            // Trik: Set src ke video_feed dan tambahkan timestamp acak untuk memaksa reload
+                            // Karena latest_frame sudah diupdate dengan gambar capture, ini akan menampilkan gambar itu.
+                            videoElement.src = `/video_feed?t=${new Date().getTime()}`;
+                            videoElement.style.display = 'block';
+                            placeholder.style.display = 'none';
+                            statusText.textContent = 'Gambar capture diterima!';
+                            setTimeout(() => statusText.textContent = '', 3000);
+                        }, 2000); // Waktu tunggu 2 detik (bisa disesuaikan)
+                    }
+                }
+            }).catch(() => statusText.textContent = 'Gagal capture!');
+        });
+    </script>
+</body>
+</html>
