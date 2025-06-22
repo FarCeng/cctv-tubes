@@ -29,32 +29,17 @@ const char* serverUrl = "https://cctv-tubes.onrender.com";
 #define VSYNC_GPIO_NUM   25
 #define HREF_GPIO_NUM    23
 #define PCLK_GPIO_NUM    22
-
 // Pin Perangkat Keras Tambahan
 #define FLASH_LED_PIN    4
 #define SERVO_TILT_PIN 12
 #define SERVO_PAN_PIN  13
-
-// =================================================================================
-// [SOLUSI DEFINITIF] Pengaturan PWM untuk semua komponen
-// =================================================================================
-// Frekuensi PWM untuk servo (standar adalah 50Hz)
 #define SERVO_FREQUENCY 50
-// Resolusi timer PWM (16-bit memberikan presisi tinggi)
 #define PWM_RESOLUTION 16
-// Nilai duty cycle untuk 0 dan 180 derajat.
-// Dihitung berdasarkan periode 20ms (50Hz) dan duty cycle 16-bit (0-65535)
-// 1ms pulse (0 deg) = (1/20) * 65535 = ~3277
-// 2ms pulse (180 deg) = (2/20) * 65535 = ~6554
 #define SERVO_MIN_PULSE_WIDTH 3277
 #define SERVO_MAX_PULSE_WIDTH 6554
-
-// Alokasi channel PWM yang berbeda untuk setiap komponen untuk MENGHINDARI KONFLIK
-// Kamera menggunakan channel 0 secara internal.
 #define LEDC_CHANNEL_LED  1
 #define LEDC_CHANNEL_PAN  2
 #define LEDC_CHANNEL_TILT 3
-// =================================================================================
 
 // Variabel untuk menyimpan state terakhir
 int lastPan = 90;
