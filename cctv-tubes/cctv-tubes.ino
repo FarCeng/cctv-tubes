@@ -1,4 +1,3 @@
-// Menghapus total library <ESP32Servo.h> dan menggunakan kontrol PWM manual
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -7,10 +6,7 @@
 // == PENGATURAN PENGGUNA ==
 const char* ssid = "OPPOF";
 const char* password = "12345678";
-// [PERUBAHAN] Ganti IP dan Port dengan satu URL dari Render
-// Ganti URL ini dengan URL aplikasi Anda di Render setelah di-deploy
 const char* serverUrl = "https://cctv-tubes.onrender.com";
-
 
 // Pinout Kamera (AI Thinker) - Tidak ada perubahan
 #define PWDN_GPIO_NUM    32
@@ -63,33 +59,26 @@ void setServoAngle(int channel, int angle); // Fungsi baru untuk kontrol servo
 
 void setup() {
   Serial.begin(115200);
-  
-  // 1. Inisialisasi kamera PERTAMA untuk mengunci sumber dayanya
+  // Inisialisasi kamera
   initializeCamera();
-  
-  // 2. Setup PWM untuk LED menggunakan channel 1
-  ledcSetup(LEDC_CHANNEL_LED, 5000, 8); // Frekuensi tinggi, resolusi 8-bit untuk LED
+  // Setup PWM untuk LED menggunakan channel 1
+  ledcSetup(LEDC_CHANNEL_LED, 5000, 8);
   ledcAttachPin(FLASH_LED_PIN, LEDC_CHANNEL_LED);
   ledcWrite(LEDC_CHANNEL_LED, 0);
-
-  // 3. Setup PWM untuk SERVO PAN menggunakan channel 2
+  // Setup PWM untuk SERVO PAN menggunakan channel 2
   ledcSetup(LEDC_CHANNEL_PAN, SERVO_FREQUENCY, PWM_RESOLUTION);
   ledcAttachPin(SERVO_PAN_PIN, LEDC_CHANNEL_PAN);
-
-  // 4. Setup PWM untuk SERVO TILT menggunakan channel 3
+  // Setup PWM untuk SERVO TILT menggunakan channel 3
   ledcSetup(LEDC_CHANNEL_TILT, SERVO_FREQUENCY, PWM_RESOLUTION);
   ledcAttachPin(SERVO_TILT_PIN, LEDC_CHANNEL_TILT);
-
-  // 5. Atur posisi awal servo menggunakan fungsi baru
+  // Atur posisi awal servo menggunakan fungsi baru
   setServoAngle(LEDC_CHANNEL_PAN, lastPan);
   setServoAngle(LEDC_CHANNEL_TILT, lastTilt);
-
-  // 6. Terakhir, hubungkan ke WiFi
+  // Terakhir, hubungkan ke WiFi
   connectToWifi();
 }
 
 void loop() {
-  // Loop utama tidak ada perubahan
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi terputus. Mencoba menghubungkan kembali...");
     connectToWifi();

@@ -1,10 +1,8 @@
 #Kelompok Tugas Besar- Farrel (21) & Abizar (51)
-
 import os
 from flask import Flask, render_template, request, jsonify, Response
 from datetime import datetime
 
-# Inisialisasi aplikasi Flask
 app = Flask(__name__)
 
 # Konfigurasi folder untuk menyimpan gambar hasil capture
@@ -27,12 +25,10 @@ latest_frame = None
 # Route Dashboard
 @app.route('/')
 def index():
-    """Menampilkan halaman dashboard utama (index.html)."""
     return render_template('index.html', current_state=esp32_state)
 
 @app.route('/images')
 def image_gallery():
-    """Menampilkan halaman galeri gambar (gallery.html)."""
     try:
         image_files = sorted(
             [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith(('.jpg', '.jpeg'))],
@@ -46,11 +42,9 @@ def image_gallery():
 # Route API Komunikasi HTML dengan Flask
 @app.route('/update_controls', methods=['POST'])
 def update_controls():
-    """Menerima update dari slider dan tombol 'Kirim' di dashboard web."""
     global esp32_state
     data = request.json
-    
-    # Menerjemahkan data dari web ke format yang dimengerti C++
+    # Menerjemahkan data dari web ke format yang dimengerti ESP
     esp32_state['servo_pan'] = int(data['pan'])
     esp32_state['servo_tilt'] = int(data['tilt'])
     esp32_state['led_intensity'] = int(data['cahaya'])
@@ -60,7 +54,6 @@ def update_controls():
 
 @app.route('/toggle_stream', methods=['POST'])
 def toggle_stream():
-    """Menyalakan atau mematikan mode streaming dari tombol di web."""
     global esp32_state
     esp32_state['stream'] = not esp32_state['stream']
     status = "ON" if esp32_state['stream'] else "OFF"
@@ -69,7 +62,6 @@ def toggle_stream():
 
 @app.route('/trigger_capture', methods=['POST'])
 def trigger_capture():
-    """Memberi sinyal ke ESP32 untuk mengambil satu gambar dari tombol di web."""
     global esp32_state
     esp32_state['capture'] = True
     print("Capture command set to True")
@@ -77,7 +69,6 @@ def trigger_capture():
 
 # Fungsi untuk Stream
 def video_stream_generator():
-    """Generator yang terus-menerus mengirimkan frame video terbaru."""
     global latest_frame
     while True:
         if latest_frame:
@@ -86,32 +77,23 @@ def video_stream_generator():
 
 @app.route('/video_feed')
 def video_feed():
-    """Rute ini yang dipanggil oleh tag <img> di HTML untuk menampilkan video."""
     return Response(video_stream_generator(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Route API Komunikasi Server dengan ESP32 Cam
 @app.route('/get-commands', methods=['GET'])
 def get_commands():
-    """
-    ENDPOINT INI YANG DIPANGGIL OLEH ESP32.
-    Nama rute '/get-commands' sama persis seperti di kode C++.
-    """
     global esp32_state
-    
     commands_to_send = esp32_state.copy()
-    
     # Setelah ESP32 mengambil perintah capture, reset flag-nya menjadi False
     # agar tidak mengambil gambar terus-menerus.
     if esp32_state['capture']:
         esp32_state['capture'] = False
-        
     # Mengirim data JSON dengan format yang sama persis seperti yang diharapkan C++.
     return jsonify(commands_to_send)
 
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
-    """Menerima gambar yang di-capture dari ESP32 dan menyimpannya."""
     global latest_frame # Tambahkan ini untuk memodifikasi variabel global
     if request.content_type != 'image/jpeg':
         return "Content-Type not supported!", 400
@@ -126,14 +108,12 @@ def upload_image():
     
     with open(filepath, 'wb') as f:
         f.write(image_data) # Gunakan data yang sudah disimpan di variabel
-        
+  
     print(f"Image received and saved as {filename}")
     return "Image uploaded successfully", 200
 
-
 @app.route('/upload-frame', methods=['POST'])
 def upload_frame():
-    """Menerima frame video dari ESP32 untuk di-stream."""
     global latest_frame
     if request.content_type == 'image/jpeg':
         latest_frame = request.data
