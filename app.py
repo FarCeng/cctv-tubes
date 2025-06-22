@@ -100,7 +100,7 @@ def upload_image():
     
     # Simpan data gambar untuk stream dan untuk file
     image_data = request.data
-    latest_frame = image_data # <-- BARIS KUNCI: Update frame terbaru
+    latest_frame = image_data # Update frame terbaru
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"capture_{timestamp}.jpg"
