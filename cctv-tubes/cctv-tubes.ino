@@ -74,7 +74,7 @@ void setup() {
   // Atur posisi awal servo menggunakan fungsi baru
   setServoAngle(LEDC_CHANNEL_PAN, lastPan);
   setServoAngle(LEDC_CHANNEL_TILT, lastTilt);
-  // Terakhir, hubungkan ke WiFi
+  // Hubungkan ke WiFi
   connectToWifi();
 }
 
@@ -98,7 +98,7 @@ void loop() {
   }
 }
 
-// [FUNGSI BARU] Menggantikan total library servo
+// Fungsi untuk mengubah nilai servo
 void setServoAngle(int channel, int angle) {
   // Memetakan sudut 0-180 ke rentang pulse width yang sesuai
   int pulseWidth = map(angle, 0, 180, SERVO_MIN_PULSE_WIDTH, SERVO_MAX_PULSE_WIDTH);
@@ -132,22 +132,22 @@ void getAndExecuteCommands() {
     int tilt = doc["servo_tilt"];
     int ledIntensity = doc["led_intensity"];
     
-    // Gerakkan Servo menggunakan FUNGSI BARU yang anti-konflik
+    // Atur gerakan Servo
     if (pan != lastPan) {
-      setServoAngle(LEDC_CHANNEL_PAN, pan); // Panggil fungsi baru untuk Pan
+      setServoAngle(LEDC_CHANNEL_PAN, pan); // Panggil fungsi servo untuk Pan
       lastPan = pan;
       Serial.print("Pan set to: ");
       Serial.println(pan);
     }
 
     if (tilt != lastTilt) {
-      setServoAngle(LEDC_CHANNEL_TILT, tilt); // Panggil fungsi baru untuk Tilt
+      setServoAngle(LEDC_CHANNEL_TILT, tilt); // Panggil fungsi servo untuk Tilt
       lastTilt = tilt;
       Serial.print("Tilt set to: ");
       Serial.println(tilt);
     }
 
-    // Atur LED menggunakan channel yang benar
+    // Atur nilai intensitas LED 
     if (ledIntensity != lastLedIntensity) {
         ledcWrite(LEDC_CHANNEL_LED, ledIntensity);
         lastLedIntensity = ledIntensity;
