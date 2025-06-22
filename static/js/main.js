@@ -1,7 +1,6 @@
-// static/js/main.js
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Definisi Elemen ---
+    //Definisi Elemen
     const controls = {
         tilt: {
             slider: document.getElementById('tilt'),
@@ -19,27 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const statusText = document.getElementById('status-text');
 
-    // --- Logika Sinkronisasi Slider dan Input Angka ---
+    //Logika Sinkronisasi Slider dan Input Angka
     function setupControlSync(controlName) {
         const { slider, number } = controls[controlName];
         const min = parseInt(slider.min, 10);
         const max = parseInt(slider.max, 10);
 
-        // Sinkronisasi dari Slider ke Input Angka
+        //Sinkronisasi dari Slider ke Input Angka
         slider.addEventListener('input', () => {
             number.value = slider.value;
         });
 
-        // Sinkronisasi dari Input Angka ke Slider dengan Validasi
+        //Sinkronisasi dari Input Angka ke Slider dengan Validasi
         number.addEventListener('input', () => {
             let value = parseInt(number.value, 10);
-            
             // Jika input bukan angka, jangan lakukan apa-apa
             if (isNaN(value)) {
                 return;
             }
-
-            // Batasi nilai dalam rentang min/max
             if (value > max) {
                 value = max;
                 number.value = max;
@@ -51,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             slider.value = value;
         });
-        
+
         // Handle jika input angka dikosongkan
         number.addEventListener('blur', () => {
              if (number.value === '') {
@@ -64,8 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupControlSync('pan');
     setupControlSync('cahaya');
 
-    // --- Logika Tombol ---
-
+    // Logika Tombol
     // Tombol Kirim Perintah
     document.getElementById('send-controls').addEventListener('click', () => {
         const controlsData = {
@@ -75,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         statusText.textContent = 'Mengirim perintah...';
+
         fetch('/update_controls', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
