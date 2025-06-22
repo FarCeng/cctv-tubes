@@ -25,7 +25,6 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; background: #
     border-radius: 5px;
     text-align: center;
     font-size: 1em;
-    -moz-appearance: textfield; /* Sembunyikan panah di Firefox */
 }
 .value-input::-webkit-outer-spin-button,
 .value-input::-webkit-inner-spin-button {
