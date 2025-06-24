@@ -6,7 +6,7 @@
 // == PENGATURAN PENGGUNA ==
 const char* ssid = "OPPOF";
 const char* password = "12345678";
-const char* serverUrl = "https://cctv-tubes.onrender.com";
+const char* serverUrl = "https://farceng.pythonanywhere.com/";
 
 // Pinout Kamera (AI Thinker) - Tidak ada perubahan
 #define PWDN_GPIO_NUM    32
