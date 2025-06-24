@@ -2,7 +2,6 @@
 import os
 from flask import Flask, render_template, request, jsonify, Response
 from datetime import datetime
-import time
 
 app = Flask(__name__)
 
@@ -75,9 +74,6 @@ def video_stream_generator():
         if latest_frame:
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + latest_frame + b'\r\n')
-            latest_frame = None # Reset setelah dikirim agar tidak mengirim frame yang sama terus menerus jika ESP32 berhenti
-        else:
-            time.sleep(0.1) # Tunggu 100ms sebelum cek lagi
 
 @app.route('/video_feed')
 def video_feed():
